@@ -1,4 +1,4 @@
-package broadcaster
+package broadcast
 
 type Channel chan packet
 
