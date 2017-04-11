@@ -7,34 +7,31 @@ func New() Channel {
 }
 
 type packet struct {
-	channel Channel
-	value   interface{}
+	c Channel
+	v interface{}
 }
 
 func wrap(value interface{}) packet {
-	return packet{
-		channel: New(),
-		value:   value,
-	}
+	return packet{New(), value}
 }
 
-func (channel Channel) send(pack packet) Channel {
-	channel <- pack
-	return pack.channel
+func (c Channel) send(p packet) Channel {
+	c <- p
+	return p.c
 }
 
-func (channel Channel) Dispatch(value <-chan interface{}) {
+func (c Channel) Dispatch(value <-chan interface{}) {
 	for {
-		channel = channel.send(
+		c = c.send(
 			wrap(<-value),
 		)
 	}
 }
 
-func (channel Channel) Stream(into chan<- interface{}) {
+func (c Channel) Stream(into chan<- interface{}) {
 	for {
-		packet := <-channel
-		into <- packet.value
-		channel = channel.send(packet)
+		p := <-c
+		c = c.send(p)
+		into <- p.v
 	}
 }
