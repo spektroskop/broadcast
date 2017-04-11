@@ -1,37 +1,34 @@
 package broadcast
 
-type Channel chan packet
-
-func New() Channel {
-	return make(Channel, 1)
-}
+type channel chan packet
 
 type packet struct {
-	c Channel
+	c channel
 	v interface{}
 }
 
+func Channel() channel {
+	return make(channel, 1)
+}
+
 func wrap(value interface{}) packet {
-	return packet{New(), value}
+	return packet{Channel(), value}
 }
 
-func (c Channel) send(p packet) Channel {
-	c <- p
-	return p.c
+func (c *channel) unwrap(p packet) interface{} {
+	*c <- p
+	*c = p.c
+	return p.v
 }
 
-func (c Channel) Dispatch(value <-chan interface{}) {
+func (c channel) From(receive <-chan interface{}) {
 	for {
-		c = c.send(
-			wrap(<-value),
-		)
+		c.unwrap(wrap(<-receive))
 	}
 }
 
-func (c Channel) Stream(into chan<- interface{}) {
+func (c channel) Into(send chan<- interface{}) {
 	for {
-		p := <-c
-		c = c.send(p)
-		into <- p.v
+		send <- c.unwrap(<-c)
 	}
 }
