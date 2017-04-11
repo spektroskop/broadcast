@@ -1,32 +1,32 @@
 package broadcaster
 
-type Channel chan Packet
+type Channel chan packet
 
 func New() Channel {
 	return make(Channel, 1)
 }
 
-type Packet struct {
+type packet struct {
 	channel Channel
 	value   interface{}
 }
 
-func NewPacket(value interface{}) Packet {
-	return Packet{
+func wrap(value interface{}) packet {
+	return packet{
 		channel: New(),
 		value:   value,
 	}
 }
 
-func (channel Channel) send(packet Packet) Channel {
-	channel <- packet
-	return packet.channel
+func (channel Channel) send(pack packet) Channel {
+	channel <- pack
+	return pack.channel
 }
 
-func (channel Channel) Dispatch(receive <-chan interface{}) {
+func (channel Channel) Dispatch(value <-chan interface{}) {
 	for {
 		channel = channel.send(
-			NewPacket(<-receive),
+			wrap(<-value),
 		)
 	}
 }
@@ -34,7 +34,7 @@ func (channel Channel) Dispatch(receive <-chan interface{}) {
 func (channel Channel) Stream(into chan<- interface{}) {
 	for {
 		packet := <-channel
-		channel = channel.send(packet)
 		into <- packet.value
+		channel = channel.send(packet)
 	}
 }
