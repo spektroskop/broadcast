@@ -11,24 +11,19 @@ func Channel() channel {
 	return make(channel, 1)
 }
 
-func wrap(value interface{}) packet {
-	return packet{Channel(), value}
-}
-
-func (c *channel) unwrap(p packet) interface{} {
-	*c <- p
-	*c = p.c
-	return p.v
-}
-
 func (c channel) From(receive <-chan interface{}) {
 	for {
-		c.unwrap(wrap(<-receive))
+		p := packet{Channel(), <-receive}
+		c <- p
+		c = p.c
 	}
 }
 
 func (c channel) Into(send chan<- interface{}) {
 	for {
-		send <- c.unwrap(<-c)
+		p := <-c
+		c <- p
+		c = p.c
+		send <- p.v
 	}
 }
