@@ -11,9 +11,21 @@ func Channel() channel {
 	return make(channel, 1)
 }
 
-func (c channel) From(receive <-chan interface{}) {
+func wrap(value interface{}) packet {
+	return packet{Channel(), value}
+}
+
+func (c *channel) Fromp(receive chan interface{}) {
 	for {
-		p := packet{Channel(), <-receive}
+		p := wrap(<-receive)
+		*c <- p
+		*c = p.c
+	}
+}
+
+func (c channel) From(receive chan interface{}) {
+	for {
+		p := wrap(<-receive)
 		c <- p
 		c = p.c
 	}
