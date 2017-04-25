@@ -61,8 +61,8 @@ func (c Channel) From(ctx context.Context, source <-chan interface{}) {
 			return
 		case value := <-source:
 			c.unwrap(wrap(open(), value))
-		case receiever := <-c.listen:
-			go c.receive(receiever)
+		case receiver := <-c.listen:
+			go c.receive(receiver)
 		}
 	}
 }
